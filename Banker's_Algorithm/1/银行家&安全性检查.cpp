@@ -135,21 +135,33 @@ int main()
         cout<<"输入进程所请求的各个资源的数量\n";
         for (i=0;i<n;i++)
         cin>>Request[mi][i];
+		int flag = 1;
         for (i=0;i<n;i++)
         {
 
             if (Request[mi][i]>Need[mi][i])
             {
+				flag=0;
                 cout<<"所请求资源数超过进程的需求量！\n";
                 break;
             }
             if (Request[mi][i]>Available[i])
             {
+				flag=0;
                 cout<<"所请求资源数超过系统所有的资源数！\n";
                 break;
             }
         }
-		for(i=0;i<m;i++){
+		
+        for (i=0;i<n;i++)
+        {
+            Available[i]-=Request[mi][i];//系统可分配减少
+            Allocation[mi][i]+=Request[mi][i];//已分配增加
+            Need[mi][i]-=Request[mi][i];//本进程需求量减少
+        }
+        if (Safe()&& flag){
+            cout<<"同意分配请求\n";
+			for(i=0;i<m;i++){
 				bestRequest[i].id = i;
 				bestRequest[i].sum = 0;
 				bestRequest[i].nav = false;
@@ -196,14 +208,7 @@ int main()
 			else{
 				printf("本进程无法请求\n");
 			}
-        for (i=0;i<n;i++)
-        {
-            Available[i]-=Request[mi][i];//系统可分配减少
-            Allocation[mi][i]+=Request[mi][i];//已分配增加
-            Need[mi][i]-=Request[mi][i];//本进程需求量减少
-        }
-        if (Safe())
-            cout<<"同意分配请求\n";
+		}
         else
         {
             cout<<"你的请求被拒绝…\n";
@@ -213,6 +218,53 @@ int main()
                 Allocation[mi][i]-=Request[mi][i];
                 Need[mi][i]+=Request[mi][i];
             }
+			for(i=0;i<m;i++){
+				bestRequest[i].id = i;
+				bestRequest[i].sum = 0;
+				bestRequest[i].nav = false;
+				for(j=0;j<n;j++){
+					bestRequest[i].request[j]=Available[j]-Need[i][j];
+					bestRequest[i].sum+=bestRequest[i].request[j];
+					if(bestRequest[i].request[j]<0){
+						bestRequest[i].nav = true;
+					}
+				}
+			}
+			sort(bestRequest,bestRequest+m,camp);//降序
+			int sum=0;
+			for(i=0;i<m;i++){
+				int mm[100];
+				int temp = 0;
+				if(bestRequest[i].nav)
+					continue;
+				for(j=0;j<n;j++){
+					if(bestRequest[i].request[j] >= Need[mi][j]){
+						mm[j] = Need[mi][j];
+					}
+					else{
+						mm[j] = bestRequest[i].request[j];
+					}
+					temp += mm[j];
+				}
+				if(temp>sum){
+					sum = temp;
+					for(j=0;j<n;j++){
+						MaxRequest[j] = mm[j];
+					}
+				}
+			}
+
+			if(sum != 0){
+				printf("建议请求数组为：\n");
+				for(j=0;j<n;j++){
+					
+					printf("%d ",MaxRequest[j]);
+				}
+				printf("\n");
+			}
+			else{
+				printf("本进程无法请求\n");
+			}
 			
         }
 
